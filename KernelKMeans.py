@@ -1,35 +1,77 @@
-from KernelFunctions import KernelFunctions
+from KernelMatrix import KernelMatrix
+from Cluster import Cluster
+from PointSums import PoinSums
 import numpy as np
 
-#  Ideas
-#
-# Create buckets for sums in 2nd and 3rd terms of kernel k means dist calculation
-# When a node shifts clusters, move its K_ij val from its old cluster to its new cluster
-# This saves n^2 - cn computations per iteration of k-means where c is the number of nodes
-# which change clusters in a given iteration and n is the number of points
-#
+class KernelKMeans:
+    def __init__(self, kernelType, paramVal):
+        if kernelType == "polynomial":
+            self.kernelType = 0
+        elif kernelType == "rbf":
+            self.kernelType = 1
+        else:
+            self.kernelType = 2
 
-class KernelMatrix:
-    def __init__(self, data, kernelType, paramVal):
-        self.matrix = None
+        self.paramVal = paramVal
 
-        if kernelType == 0:
-            _initMatrix(data, KernelFunctions.Polynomial, paramVal)
-        elif kernelType == 1:
-            _initMatrix(data, KernelFunctions.Gaussian, paramVal)
-        elif kernelType == 2:
-            _initMatrix(data, KernelFunctions.InverseMultiquadratic, paramVal)
-
-    def _initMatrix(data, kernelFunction, paramVal):
-        n = data.shape[0]
-        self.matrix = np.zeros((n, n))
+    def __initClusters(self, k, n):
+        clusters = [Cluster(gramMatrix) for i in range(0, k)]
 
         for i in range(0, n):
-            for j in range(0, n):
-                self.matrix[i, j] = kernelFunction(data[i,:], data[j,:], paramVal)
+            clusters[np.random.randint(0, k)].addPoint(i)
 
-    def __getitem__(self, idx):
-        return self.matrix[idx]
-            
+        return clusters
+
+    def __initClusterMap(self, clusters):
+        clusterMap = {}
+
+        for i in range(0, k):
+            for assignment in cluster[i].clusterPoints:
+                clusterMap[assignment] = i
+
+        return clusterMap
+
+    def __converged(self, clusterMap):
+        if clusterMap != self.lastClusterMap:
+            self.lastClusterMap = clusterMap
+            return True
+        else:
+            return False
+
+    def __iterate(self, gramMatrix, clusterMap, clusters, pointSums, n, maxIter):
+        t = 0
+        distCalcAgent = DistanceCalc(gramMatrix)
         
+        while (not __converged(clusterMap)) and t < maxIter:
+            clusterAssignmentChanges = []
+            # Determine whether any assignments change
+            for i in range(0, n):
+                newAssignment = distCalcAgent.minDist(i, clusters, pointSums)
+                if newAssignment != clusterMap[i]:
+                    clusterAssignmentChanges.append((i, clusterMap[i]))
+                    clusterMap[i] = newAssignment
+
+            for dataPointIdx, oldCluster in clusterAssignmentChanges:
+                clusters[oldCluster].removePoint(dataPointIdx)
+                clusters[clusterMap[dataPointIdx]].addPoint(dataPointIdx)
+                pointSums.changeClusterAssignment(dataPointIdx, oldCluster, clusterMap[dataPointIdx])
+
+            t += 1
+
+        clusterAssignments = [clusterMap[i] for i in range(0, n)]
+        return clusterAssignments
+
+    def cluster(self, data, k, maxIter, clusters = None):
+        self.lastClusterMap = None
+        gramMatrix = KernelMatrix(data, self.kernelType, self.paramVal)
+        if clusters == None:
+            clusters = __initClusters(k)
+
+        clusterMap = __initClusterMap(clusters)
+        pointSums = PointSums(gramMatrix, clusters, data.shape[0])
+
+        return __iterate(gramMatrix, clusterMap, clusters, pointSums, maxIter)
+
+
+         
 

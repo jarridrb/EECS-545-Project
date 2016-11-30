@@ -1,6 +1,6 @@
 class Cluster:
-    def __init__(self, pointsInCluster, kernelMatrix):
-        self.clusterPoints = pointsInCluster
+    def __init__(self, kernelMatrix, pointsInCluster = None):
+        self.clusterPoints = pointsInCluster if pointsInCluster != None else []
         self.kernelMatrix = kernelMatrix
 
         self.sum = 0
@@ -21,8 +21,11 @@ class Cluster:
 
         self.clusterPoints.remove(idx)
 
-    def secondTermVal(self):
+    def thirdTermVal(self):
         return self.sum / (len(self.clusterPoints) ** 2)
         
     def size(self):
         return len(self.clusterPoints)
+
+    def center(self):
+        return self.sum / float(len(self.clusterPoints))
