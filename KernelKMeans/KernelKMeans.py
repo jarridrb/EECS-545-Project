@@ -2,7 +2,9 @@ from KernelMatrix import KernelMatrix
 from Cluster import Cluster
 from PointSums import PointSums
 from DistanceCalc import DistanceCalc
+from pdb import set_trace as st
 import numpy as np
+import copy
 
 class KernelKMeans:
     def __init__(self, kernelType, paramVal):
@@ -34,10 +36,10 @@ class KernelKMeans:
 
     def __converged(self, clusterMap):
         if clusterMap != self.lastClusterMap:
-            self.lastClusterMap = clusterMap
-            return True
-        else:
+            self.lastClusterMap = copy.deepcopy(clusterMap)
             return False
+        else:
+            return True
 
     def __iterate(self, clusterMap, clusters, pointSums, n, maxIter):
         t = 0
@@ -59,6 +61,7 @@ class KernelKMeans:
 
             t += 1
 
+        print(t)
         clusterAssignments = [clusterMap[i] for i in range(0, n)]
         return clusterAssignments
 
@@ -72,4 +75,3 @@ class KernelKMeans:
         pointSums = PointSums(self.gramMatrix, clusters, data.shape[0])
 
         return self.__iterate(clusterMap, clusters, pointSums, data.shape[0], maxIter)
-
