@@ -1,6 +1,7 @@
 from KernelMatrix import KernelMatrix
 from Cluster import Cluster
-from PointSums import PoinSums
+from PointSums import PointSums
+from DistanceCalc import DistanceCalc
 import numpy as np
 
 class KernelKMeans:
@@ -15,7 +16,7 @@ class KernelKMeans:
         self.paramVal = paramVal
 
     def __initClusters(self, k, n):
-        clusters = [Cluster(gramMatrix) for i in range(0, k)]
+        clusters = [Cluster(self.gramMatrix) for i in range(0, k)]
 
         for i in range(0, n):
             clusters[np.random.randint(0, k)].addPoint(i)
@@ -25,8 +26,8 @@ class KernelKMeans:
     def __initClusterMap(self, clusters):
         clusterMap = {}
 
-        for i in range(0, k):
-            for assignment in cluster[i].clusterPoints:
+        for i in range(0, len(clusters)):
+            for assignment in clusters[i].clusterPoints:
                 clusterMap[assignment] = i
 
         return clusterMap
@@ -38,11 +39,11 @@ class KernelKMeans:
         else:
             return False
 
-    def __iterate(self, gramMatrix, clusterMap, clusters, pointSums, n, maxIter):
+    def __iterate(self, clusterMap, clusters, pointSums, n, maxIter):
         t = 0
-        distCalcAgent = DistanceCalc(gramMatrix)
-        
-        while (not __converged(clusterMap)) and t < maxIter:
+        distCalcAgent = DistanceCalc(self.gramMatrix)
+
+        while (not self.__converged(clusterMap)) and t < maxIter:
             clusterAssignmentChanges = []
             # Determine whether any assignments change
             for i in range(0, n):
@@ -63,15 +64,12 @@ class KernelKMeans:
 
     def cluster(self, data, k, maxIter, clusters = None):
         self.lastClusterMap = None
-        gramMatrix = KernelMatrix(data, self.kernelType, self.paramVal)
+        self.gramMatrix = KernelMatrix(data, self.kernelType, self.paramVal)
         if clusters == None:
-            clusters = __initClusters(k)
+            clusters = self.__initClusters(k, data.shape[0])
 
-        clusterMap = __initClusterMap(clusters)
-        pointSums = PointSums(gramMatrix, clusters, data.shape[0])
+        clusterMap = self.__initClusterMap(clusters)
+        pointSums = PointSums(self.gramMatrix, clusters, data.shape[0])
 
-        return __iterate(gramMatrix, clusterMap, clusters, pointSums, maxIter)
-
-
-         
+        return self.__iterate(clusterMap, clusters, pointSums, data.shape[0], maxIter)
 

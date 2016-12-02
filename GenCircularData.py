@@ -2,7 +2,8 @@ import numpy as np
 import math
 
 class CircularDataGen:
-    def GenerateCircle(self, xCenter, yCenter, radius, size, sigma = .1):
+    @staticmethod
+    def GenerateCircle(xCenter, yCenter, radius, size, sigma = .1):
         points = np.zeros((size, 2))
         sample = np.random.normal(0, sigma, size)
 
@@ -18,5 +19,4 @@ class CircularDataGen:
             points[i,1] = y
 
         return points
-
 

@@ -14,13 +14,13 @@ class KernelMatrix:
         self.matrix = None
 
         if kernelType == 0:
-            _initMatrix(data, KernelFunctions.Polynomial, paramVal)
+            self.__initMatrix(data, KernelFunctions.Polynomial, paramVal)
         elif kernelType == 1:
-            _initMatrix(data, KernelFunctions.Gaussian, paramVal)
+            self.__initMatrix(data, KernelFunctions.Gaussian, paramVal)
         elif kernelType == 2:
-            _initMatrix(data, KernelFunctions.InverseMultiquadratic, paramVal)
+            self.__initMatrix(data, KernelFunctions.InverseMultiquadratic, paramVal)
 
-    def __initMatrix(data, kernelFunction, paramVal):
+    def __initMatrix(self, data, kernelFunction, paramVal):
         n = data.shape[0]
         self.matrix = np.zeros((n, n))
 
@@ -30,6 +30,6 @@ class KernelMatrix:
 
     def __getitem__(self, idx):
         return self.matrix[idx]
-            
-        
+
+
 

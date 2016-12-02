@@ -7,23 +7,23 @@ class Cluster:
 
         for i in self.clusterPoints:
             for j in self.clusterPoints:
-                self.sum += kernelMatrix[i,j]         
+                self.sum += kernelMatrix[i,j]
 
     def addPoint(self, idx):
         self.clusterPoints.append(idx)
 
         for i in self.clusterPoints:
-            self.sum += kernelMatrix[idx, i]
+            self.sum += self.kernelMatrix[idx, i]
 
     def removePoint(self, idx):
         for i in self.clusterPoints:
-            self.sum -= kernelMatrix[idx, i]
+            self.sum -= self.kernelMatrix[idx, i]
 
         self.clusterPoints.remove(idx)
 
     def thirdTermVal(self):
         return self.sum / (len(self.clusterPoints) ** 2)
-        
+
     def size(self):
         return len(self.clusterPoints)
 
