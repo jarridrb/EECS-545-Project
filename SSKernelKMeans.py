@@ -12,6 +12,6 @@ class SSKernelKMeans:
         kMatrix = (self.__findSigma(initKMatrix) * np.identity(initKMatrix.shape[0])) + initKMatrix
 
         initializationAgent = FarthestFirstInitialization()
-        initialClusters = initializationAgent(InitializeClusters)
+        initialClusters = initializationAgent.InitializeClusters(similarityMatrix, weightMatrix, k)
 
         return KernelKMeans.Cluster(kMatrix, k, np.ones(kMatrix.shape[0]), initialClusters)
