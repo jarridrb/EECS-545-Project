@@ -31,5 +31,8 @@ class KernelMatrix:
     def __getitem__(self, idx):
         return self.matrix[idx]
 
+    def raw(self):
+        return self.matrix
+
 
 
