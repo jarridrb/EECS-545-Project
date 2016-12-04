@@ -104,3 +104,4 @@ class SSKernelKMeans:
         initialClusters = initializationAgent.InitializeClusters(similarityMatrix, weightMatrix, k)
 
         return KernelKMeans.Cluster(kMatrix, k, np.ones(kMatrix.shape[0]), initialClusters)
+
