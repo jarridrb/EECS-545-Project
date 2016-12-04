@@ -1,24 +1,25 @@
 from Graph import Graph
 import numpy as np
+import sys
+sys.path.insert(0, '/home/jrectorb/eecs/545/EECS-545-Project/KernelKMeans')
+from Cluster import *
+from pdb import set_trace as st
 
 class FarthestFirstInitialization:
     def __init__(self, similarityMatrix):
         self.similarityMatrix = similarityMatrix
 
-    def __distFromSelectedCluster(self, selectedClusters, candidateCluster):
-        distance = 0
+    def __distFromSelectedCluster(self, selectedCluster, candidateCluster):
+        firstTerm = selectedCluster.thirdTermVal()
 
-        for selectedCluster in selectedClusters:
-            firstTerm = selectedCluster.thirdTermVal()
+        secondTerm = 0
+        for i in selectedCluster.clusterPoints:
+            for j in candidateCluster.clusterPoints:
+                secondTerm += self.similarityMatrix[i][j]
+        secondTerm = (-2 * secondTerm) / (selectedCluster.size() * candidateCluster.size())
 
-            secondTerm = 0
-            for i in selectedCluster.clusterPoints:
-                for j in candidateCluster.clusterPoints:
-                    secondTerm += self.similarityMatrix[i][j]
-            secondTerm = (-2 * secondTerm) / (selectedCluster.size() * candidateCluster.size())
-
-            thirdTerm = candidateCluster.thirdTermVal()
-            distance += firstTerm + secondTerm + thirdTerm
+        thirdTerm = candidateCluster.thirdTermVal()
+        distance = firstTerm + secondTerm + thirdTerm
 
         return distance
 
@@ -30,7 +31,7 @@ class FarthestFirstInitialization:
         for i in range(len(candidateClusters)):
             thisDist = 0
             for selectedCluster in selectedClusters:
-                thisDist += self.__distFromSelectedCluster(selectedCluster, candidateCluster)
+                thisDist += self.__distFromSelectedCluster(selectedCluster, candidateClusters[i])
 
             if farthestDist == -1 or thisDist > farthestDist:
                 farthestDist = thisDist
@@ -39,29 +40,30 @@ class FarthestFirstInitialization:
         return farthestCluster
 
     def InitializeClusters(self, neighborhoods, k):
-        candidateClusters = [Cluster(similarityMatrix) for i in range(neihborhoods.keys())]
+        candidateClusters = [Cluster(self.similarityMatrix) for i in range(len(neighborhoods.keys()))]
         bestSize = -1
         largestCluster = -1
 
-        for neigborhoodNum, neighborhoodMembers:
-            for i in neighborhoodMembers:
-                candidateClusters[neighborhoodNum].addPoint(i)
+        # Need case if len(candidateClusters) < k
+        if k == len(candidateClusters):
+            selectedClusters = candidateClusters
 
-            if bestSize == -1 or candidateClusters[neighborhoodNum].size() < bestSize:
-                bestSize = candidateClusters[neighborhoodNum].size()
-                largestCluster = neighborhoodNum
+        else:
+            for neighborhoodNum, neighborhoodMembers in neighborhoods.items():
+                for i in neighborhoodMembers:
+                    candidateClusters[neighborhoodNum].addPoint(i)
 
-        # Clean this up
-        if k == len(initialClusters):
-            return candidateClusters
+                if bestSize == -1 or candidateClusters[neighborhoodNum].size() > bestSize:
+                    bestSize = candidateClusters[neighborhoodNum].size()
+                    largestCluster = neighborhoodNum
 
-        selectedClusters = [candidateClusters[largestCluster]]
-        candidateClusters.pop(largestCluster)
+            selectedClusters = [candidateClusters[largestCluster]]
+            candidateClusters.pop(largestCluster)
 
-        while len(initialClusters) < k:
-            farthestCluster = self.__farthestCluster(selectedClusters, candidateClusters)
-            selectedClusters.append(candidateClusters[farthestCluster])
-            candidateClusters.pop(farthestCluster)
+            while len(selectedClusters) < k:
+                farthestCluster = self.__farthestCluster(selectedClusters, candidateClusters)
+                selectedClusters.append(candidateClusters[farthestCluster])
+                candidateClusters.pop(farthestCluster)
 
         return selectedClusters
 

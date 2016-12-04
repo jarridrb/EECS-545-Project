@@ -6,16 +6,10 @@ from pdb import set_trace as st
 import numpy as np
 import copy
 
+# These methods should be static
 class KernelKMeans:
-    def __init__(self, kernelType, paramVal):
-        if kernelType == "polynomial":
-            self.kernelType = 0
-        elif kernelType == "rbf":
-            self.kernelType = 1
-        else:
-            self.kernelType = 2
-
-        self.paramVal = paramVal
+    def __init__(self):
+        pass
 
     def __initClusters(self, k, n):
         clusters = [Cluster(self.gramMatrix) for i in range(0, k)]
@@ -65,13 +59,39 @@ class KernelKMeans:
         clusterAssignments = [clusterMap[i] for i in range(0, n)]
         return clusterAssignments
 
-    def cluster(self, data, k, maxIter, clusters = None):
+    def __ensureProperInitialization(self, clusters, pointSums):
+        pointsInClusters = {}
+        distCalcAgent = DistanceCalc(self.gramMatrix)
+        for cluster in clusters:
+            for point in cluster.clusterPoints:
+                pointsInClusters[point] = True
+
+        assignments = {}
+        for i in range(len(pointSums.points)):
+            if not i in pointsInClusters:
+                assignments[i] = distCalcAgent.minDist(i, clusters, pointSums)
+
+        for pointNum, clusterNum in assignments.items():
+            clusters[clusterNum].addPoint(pointNum)
+            pointSums.addClusterAssignment(pointNum, clusterNum)
+
+
+    # Should pointSums use kernel space data or input space data?
+    # Change to use alpha
+    def cluster(self, gramMatrix, k, maxIter, clusters = None):
         self.lastClusterMap = None
-        self.gramMatrix = KernelMatrix(data, self.kernelType, self.paramVal)
+        self.gramMatrix = gramMatrix
+        n = self.gramMatrix.shape[0]
         if clusters == None:
-            clusters = self.__initClusters(k, data.shape[0])
+            clusters = self.__initClusters(k, n)
+            userInitialized = False
+        else:
+            userInitialized = True
+
+        pointSums = PointSums(self.gramMatrix, clusters, n)
+        if userInitialized:
+            self.__ensureProperInitialization(clusters, pointSums)
 
         clusterMap = self.__initClusterMap(clusters)
-        pointSums = PointSums(self.gramMatrix, clusters, data.shape[0])
 
-        return self.__iterate(clusterMap, clusters, pointSums, data.shape[0], maxIter)
+        return self.__iterate(clusterMap, clusters, pointSums, n, maxIter)

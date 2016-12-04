@@ -11,6 +11,9 @@ class PointSum:
 
             self.clusterSums.append(sum)
 
+    def addPoint(self, point, clusterNum):
+        self.clusterSums[clusterNum] += self.kernelMatrix[self.idx, point]
+
     def changePointCluster(self, other, oldCluster, newCluster):
         val = self.kernelMatrix[self.idx, other]
 

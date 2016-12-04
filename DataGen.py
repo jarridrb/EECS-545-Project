@@ -1,5 +1,6 @@
 import numpy as np
 import math
+from pdb import set_trace as st
 
 class DataGen:
     @staticmethod
@@ -23,12 +24,15 @@ class DataGen:
     @staticmethod
     def __findPointClass(point, classRanges):
         for i in range(len(classRanges)):
-            if point >= classRanges[0] and point < classRanges[1]:
+            if point >= classRanges[i][0] and point < classRanges[i][1]:
                 return i
 
     @staticmethod
     def GenerateConstraintMatrix(classRanges, numConstraints, numPoints, k):
         weightMatrix = np.zeros((numPoints, numPoints))
+        if numConstraints == 0:
+            return weightMatrix
+
         weightVal = numPoints / float(numConstraints * k)
 
         currNumConstraints = 0
@@ -37,7 +41,7 @@ class DataGen:
             j = np.random.randint(0, numPoints)
 
             if weightMatrix[i][j] == 0:
-                if DataGen.__findPointClass(i, classRanges) != DataGen.__findPointClass(i, classRanges):
+                if DataGen.__findPointClass(i, classRanges) != DataGen.__findPointClass(j, classRanges):
                     weightMatrix[i][j] = -weightVal
                     weightMatrix[j][i] = -weightVal
                 else:

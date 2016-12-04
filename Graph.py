@@ -7,7 +7,7 @@ class Graph:
     def TransitiveClosure(adjMatrix):
         n = len(adjMatrix)
 
-        newMatrix = np.array(adjMatrix.shape)
+        newMatrix = np.zeros(adjMatrix.shape)
         for k in range(n):
             for i in range(n):
                 for j in range(n):
@@ -15,11 +15,3 @@ class Graph:
 
         return newMatrix
 
-    @staticmethod
-    def (adjMatrix):
-        '''
-        Returns l subgraphs where l is the number of connected components.  Each subgraph is a connected component of adjMatrix.
-        '''
-        numComponents, componentLabels = csgraph.connected_components(csgraph.csgraph_from_dense(adjMatrix), directed=False)
-
-        clusters = [Cluster(

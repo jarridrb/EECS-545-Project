@@ -1,5 +1,9 @@
 from FarthestFirstInitialization import *
+from scipy.sparse import csgraph
 import numpy as np
+import sys
+sys.path.insert(0, '/home/jrectorb/eecs/545/EECS-545-Project/KernelKMeans')
+from KernelKMeans import *
 from pdb import set_trace as st
 
 class SSKernelKMeans:
@@ -26,7 +30,7 @@ class SSKernelKMeans:
 
 
     def __formNeighborhoods(self, closure):
-        numComponents, componentLabels = csgraph.connected_components(csgraph.csgraph_from_dense(closure), directe=False)
+        numComponents, componentLabels = csgraph.connected_components(csgraph.csgraph_from_dense(closure), directed=False)
 
         neighborhoods = {}
         newConstraints = 0
@@ -49,7 +53,7 @@ class SSKernelKMeans:
 
         return constraintMatrix
 
-    def __augmentCannotLinkConstraint(self, constraintMatrix, neighborhoods):
+    def __augmentCannotLinkConstraints(self, constraintMatrix, neighborhoods):
         for neighborhoodNumI, neighborhoodMembersI in neighborhoods.items():
             for neighborhoodNumJ, neighborhoodMembersJ in neighborhoods.items():
                 if neighborhoodNumI != neighborhoodNumJ:
@@ -92,16 +96,21 @@ class SSKernelKMeans:
         return constraintMatrix
 
     def Cluster(self, similarityMatrix, constraintMatrix, k, maxIt = 100):
+        st()
         transClosure = Graph.TransitiveClosure(self.__getMustLinkMatrix(constraintMatrix))
         neighborhoods = self.__formNeighborhoods(transClosure)
         constraintMatrix = self.__augmentConstraintMatrix(constraintMatrix, neighborhoods, k)
 
-        initKMatrix = similarityMatrix.raw() + weightMatrix
+        initializationAgent = FarthestFirstInitialization(similarityMatrix)
+        initialClusters = initializationAgent.InitializeClusters(neighborhoods, k)
+
+        initKMatrix = similarityMatrix.raw() + constraintMatrix
         # If things are faulty, check here. Min eigval != 0 after diagonal shift right now.
         kMatrix = (self.__findSigma(initKMatrix) * np.identity(initKMatrix.shape[0])) + initKMatrix
 
-        initializationAgent = FarthestFirstInitialization()
-        initialClusters = initializationAgent.InitializeClusters(similarityMatrix, weightMatrix, k)
+        kernelKMeansAgent = KernelKMeans()
 
-        return KernelKMeans.Cluster(kMatrix, k, np.ones(kMatrix.shape[0]), initialClusters)
+        # Should eventually be this once KernelKMeans is changed to use alpha
+        # return kernelKMeansAgent.cluster(kMatrix, k, np.ones(kMatrix.shape[0]), initialClusters)
+        return kernelKMeansAgent.cluster(kMatrix, k, maxIt, initialClusters)
 
