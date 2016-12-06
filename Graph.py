@@ -11,7 +11,8 @@ class Graph:
         for k in range(n):
             for i in range(n):
                 for j in range(n):
-                    newMatrix[i][j] = adjMatrix[i][j] or (adjMatrix[i][k] and adjMatrix[k][j])
+                    if i != j:
+                        newMatrix[i][j] = newMatrix[i][j] != 0 or adjMatrix[i][j] != 0 or ((adjMatrix[i][k] == adjMatrix[k][j]) and adjMatrix[i][k] != 0)
 
         return newMatrix
 

@@ -28,6 +28,14 @@ class SSKernelKMeans:
 
         return newMatrix
 
+    def __neighborhoodsHaveCannotLink(self, a, b, constraintMatrix):
+        for i in a:
+            for j in b:
+                if constraintMatrix[i, j] < 0:
+                    return True
+
+        return False
+
 
     def __formNeighborhoods(self, closure):
         numComponents, componentLabels = csgraph.connected_components(csgraph.csgraph_from_dense(closure), directed=False)
@@ -47,34 +55,31 @@ class SSKernelKMeans:
         for neighborhoodNum, neighborhoodMembers in neighborhoods.items():
             for i in neighborhoodMembers:
                 for j in neighborhoodMembers:
-                    if constraintMatrix[i][j] == 0:
+                    if constraintMatrix[i][j] == 0 and i != j:
                         constraintMatrix[i][j] = 1
                         constraintMatrix[j][i] = 1
 
         return constraintMatrix
 
     def __augmentCannotLinkConstraints(self, constraintMatrix, neighborhoods):
-        for neighborhoodNumI, neighborhoodMembersI in neighborhoods.items():
-            for neighborhoodNumJ, neighborhoodMembersJ in neighborhoods.items():
-                if neighborhoodNumI != neighborhoodNumJ:
-                    for i in neighborhoodMembersI:
-                        for j in neighborhoodMembersJ:
+        for neighborhoodNumI, membersI in neighborhoods.items():
+            for neighborhoodNumJ, membersJ in neighborhoods.items():
+                if neighborhoodNumI != neighborhoodNumJ and self.__neighborhoodsHaveCannotLink(membersI, membersJ, constraintMatrix):
+                    for i in membersI:
+                        for j in membersJ:
                             constraintMatrix[i][j] = -1
                             constraintMatrix[j][i] = -1
 
         return constraintMatrix
 
     def __reweightConstraintMatrix(self, constraintMatrix, k):
-        alreadySeen = {}
         numConstraints = 0
 
         for i in range(constraintMatrix.shape[0]):
             for j in range(constraintMatrix.shape[0]):
-                if not ((i, j) in alreadySeen or (j, i) in alreadySeen):
-                    alreadySeen[(i, j)] = True
-                    alreadySeen[(j, i)] = True
-
+                if  constraintMatrix[i,j] != 0:
                     numConstraints += 1
+        numConstraints /= 2
 
         # Ensure float division
         weightVal = constraintMatrix.shape[0] / float(k * numConstraints)
@@ -96,17 +101,16 @@ class SSKernelKMeans:
         return constraintMatrix
 
     def Cluster(self, similarityMatrix, constraintMatrix, k, maxIt = 100):
-        st()
         transClosure = Graph.TransitiveClosure(self.__getMustLinkMatrix(constraintMatrix))
         neighborhoods = self.__formNeighborhoods(transClosure)
         constraintMatrix = self.__augmentConstraintMatrix(constraintMatrix, neighborhoods, k)
 
-        initializationAgent = FarthestFirstInitialization(similarityMatrix)
-        initialClusters = initializationAgent.InitializeClusters(neighborhoods, k)
-
         initKMatrix = similarityMatrix.raw() + constraintMatrix
         # If things are faulty, check here. Min eigval != 0 after diagonal shift right now.
         kMatrix = (self.__findSigma(initKMatrix) * np.identity(initKMatrix.shape[0])) + initKMatrix
+
+        initializationAgent = FarthestFirstInitialization(kMatrix)
+        initialClusters = initializationAgent.InitializeClusters(neighborhoods, k)
 
         kernelKMeansAgent = KernelKMeans()
 

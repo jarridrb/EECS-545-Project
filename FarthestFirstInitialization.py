@@ -23,32 +23,24 @@ class FarthestFirstInitialization:
 
         return distance
 
+    def __distanceMatrix(self, clusters):
+        n = len(clusters)
+        D = np.zeros((n, n))
 
-    def __farthestCluster(self, selectedClusters, candidateClusters):
-        farthestCluster = -1
-        farthestDist = -1
+        for i in range(n):
+            for j in range(n):
+                D[i,j] =  self.__distFromSelectedCluster(clusters[i], clusters[j])
 
-        for i in range(len(candidateClusters)):
-            thisDist = 0
-            for selectedCluster in selectedClusters:
-                thisDist += self.__distFromSelectedCluster(selectedCluster, candidateClusters[i])
-
-            if farthestDist == -1 or thisDist > farthestDist:
-                farthestDist = thisDist
-                farthestCluster = i
-
-        return farthestCluster
+        return D
 
     def InitializeClusters(self, neighborhoods, k):
         candidateClusters = [Cluster(self.similarityMatrix) for i in range(len(neighborhoods.keys()))]
-        bestSize = -1
-        largestCluster = -1
 
-        # Need case if len(candidateClusters) < k
         if k == len(candidateClusters):
             selectedClusters = candidateClusters
-
         else:
+            bestSize = -1
+            largestCluster = -1
             for neighborhoodNum, neighborhoodMembers in neighborhoods.items():
                 for i in neighborhoodMembers:
                     candidateClusters[neighborhoodNum].addPoint(i)
@@ -57,14 +49,17 @@ class FarthestFirstInitialization:
                     bestSize = candidateClusters[neighborhoodNum].size()
                     largestCluster = neighborhoodNum
 
-            selectedClusters = [candidateClusters[largestCluster]]
-            candidateClusters.pop(largestCluster)
+            distanceMatrix = self.__distanceMatrix(candidateClusters)
+            selectedClusters = [largestCluster]
+            selectedClusterDists = [distanceMatrix[largestCluster]]
 
             while len(selectedClusters) < k:
-                farthestCluster = self.__farthestCluster(selectedClusters, candidateClusters)
-                selectedClusters.append(candidateClusters[farthestCluster])
-                candidateClusters.pop(farthestCluster)
+                avgDists = np.mean(selectedClusterDists, 0)
+                for i in np.argsort(avgDists):
+                    if i not in selectedClusters:
+                        selectedClusters.append(i)
+                        selectedClusterDists.append(distanceMatrix[i])
+                        break
 
-        return selectedClusters
-
+        return [candidateClusters[i] for i in selectedClusters]
 

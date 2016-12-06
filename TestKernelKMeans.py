@@ -18,7 +18,7 @@ def Test(dataSize, paramVal, constraintStep):
     data[0:dataSize / 2, :] = DataGen.GenerateCircle(.5, .5, 2, dataSize / 2)
     data[dataSize / 2:dataSize, :] = DataGen.GenerateCircle(.5, .5, 5, dataSize / 2)
     similarityMatrix = KernelMatrix(data, 1, .5)
-    for j in range(11):
+    for j in range(1, 11):
         constraintMatrix = DataGen.GenerateConstraintMatrix([(0, dataSize / 2), (dataSize / 2, dataSize)], j * constraintStep, dataSize, 2)
         ssKernelKMeansAgent = SSKernelKMeans()
         clusterAssignments = ssKernelKMeansAgent.Cluster(similarityMatrix, constraintMatrix, 2)
@@ -32,4 +32,4 @@ def Test(dataSize, paramVal, constraintStep):
 #plt.plot(numConstraints, nmiVals)
     print('NMI = ' + str(np.average(nmiVals)))
 
-Test(30, .5, 10)
+Test(200, .5, 50)

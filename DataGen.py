@@ -40,7 +40,7 @@ class DataGen:
             i = np.random.randint(0, numPoints)
             j = np.random.randint(0, numPoints)
 
-            if weightMatrix[i][j] == 0:
+            if i != j and weightMatrix[i][j] == 0:
                 if DataGen.__findPointClass(i, classRanges) != DataGen.__findPointClass(j, classRanges):
                     weightMatrix[i][j] = -weightVal
                     weightMatrix[j][i] = -weightVal
@@ -48,8 +48,46 @@ class DataGen:
                     weightMatrix[i][j] = weightVal
                     weightMatrix[j][i] = weightVal
 
-            currNumConstraints += 1
+                currNumConstraints += 1
 
         return weightMatrix
 
+    @staticmethod
+    def GenerateTestConstraints():
+        constraintMatrix = np.zeros((6,6))
+        constraintMatrix[0,1] = 1
+        constraintMatrix[1,0] = 1
+        constraintMatrix[1,2] = 1
+        constraintMatrix[2,1] = 1
+        constraintMatrix[3,4] = 1
+        constraintMatrix[4,3] = 1
+        constraintMatrix[4,5] = 1
+        constraintMatrix[5,4] = 1
+        constraintMatrix[0,5] = -1
+
+        return constraintMatrix
+
+    @staticmethod
+    def TestFFT():
+        data = np.zeros((10, 2))
+        data[0] = [0,5]
+        data[1] = [-1,4]
+        data[2] = [1,4]
+        data[9] = [0, 4]
+        data[3] = [-3,-1]
+        data[4] = [-3,-2]
+        data[5] = [-1, -8]
+        data[6] = [1, -8]
+        data[7] = [2, -1]
+        data[8] = [2, -2]
+
+        cm = np.zeros((10,10))
+        cm[0,1] = 1
+        cm[1,2] = 1
+        cm[2,9] = 1
+        cm[3,4] = 1
+        cm[5,6] = 1
+        cm[7,8] = 1
+
+        return data, cm
 

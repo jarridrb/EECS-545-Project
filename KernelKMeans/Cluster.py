@@ -10,10 +10,13 @@ class Cluster:
                 self.sum += kernelMatrix[i,j]
 
     def addPoint(self, idx):
+        for i in self.clusterPoints:
+            self.sum += self.kernelMatrix[i, idx]
+
         self.clusterPoints.append(idx)
 
-        for i in self.clusterPoints:
-            self.sum += self.kernelMatrix[idx, i]
+        for j in self.clusterPoints:
+            self.sum += self.kernelMatrix[idx, j]
 
     def removePoint(self, idx):
         for i in self.clusterPoints:
