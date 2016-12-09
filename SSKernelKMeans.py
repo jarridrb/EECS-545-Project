@@ -112,16 +112,20 @@ class SSKernelKMeans:
         return constraintMatrix
 
     def Cluster(self, similarityMatrix, constraintMatrix, k, maxIt = 100):
-        transClosure = Graph.TransitiveClosure(self.__getMustLinkMatrix(constraintMatrix))
-        neighborhoods = self.__formNeighborhoods(transClosure)
-        constraintMatrix = self.__augmentConstraintMatrix(constraintMatrix, neighborhoods, k)
+        if self.__hasConstraints(constraintMatrix):
+            transClosure = Graph.TransitiveClosure(self.__getMustLinkMatrix(constraintMatrix))
+            neighborhoods = self.__formNeighborhoods(transClosure)
+            constraintMatrix = self.__augmentConstraintMatrix(constraintMatrix, neighborhoods, k)
 
         initKMatrix = similarityMatrix.raw() + constraintMatrix
         # If things are faulty, check here. Min eigval != 0 after diagonal shift right now.
         kMatrix = (self.__findSigma(initKMatrix) * np.identity(initKMatrix.shape[0])) + initKMatrix
 
-        initializationAgent = FarthestFirstInitialization(kMatrix)
-        initialClusters = initializationAgent.InitializeClusters(neighborhoods, k)
+        if self.__hasConstraints(constraintMatrix):
+            initializationAgent = FarthestFirstInitialization(kMatrix)
+            initialClusters = initializationAgent.InitializeClusters(neighborhoods, k)
+        else:
+            initialClusters = None
 
         kernelKMeansAgent = KernelKMeans()
 

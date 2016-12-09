@@ -11,6 +11,25 @@ from KernelKMeans import *
 from SSKernelKMeans import *
 from DataLoad import *
 
+class Testing:
+    @staticmethod
+    def TestSSKernelKMeans(labels, similarityMatrix, numConstraints, classRanges, k, numIt):
+        n = similarityMatrix.shape[0]
+
+        nmiVals = np.zeros((numIt))
+        numConstraints = np.zeros((numIt))
+
+        for i in range(numIt):
+            constraintMatrix = DataGen.GenerateConstraintMatrix(classRanges, i * constraintStep, n, k)
+            ssKernelKMeansAgent = SSKernelKMeans()
+            clusterAssignments = ssKernelKMeansAgent.Cluster(similarityMatrix, constraintMatrix, k)
+
+            nmiVals[i] = sklearn.metrics.normalized_mutual_info_score(labels, clusterAssignments)
+            numConstraints[i] = i * constraintStep
+
+        plt.plot(numConstraints, np.mean(nmiVals))
+        plt.show()
+
 def TestWithSynthetic(dataSize, paramVal, constraintStep):
     data = np.zeros((dataSize, 2))
     nmiVals = np.zeros((11))
@@ -42,7 +61,7 @@ def TestPendigits():
     numConstraints = np.zeros((11))
 
     classRanges = DataGen.GenClassRanges(labels)
-    similarityMatrix = KernelMatrix(features, 1, .5)
+    similarityMatrix = KernelMatrix(features, 1, .3)
 
     averages = []
     for j in range(20):
