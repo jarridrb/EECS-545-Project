@@ -91,3 +91,21 @@ class DataGen:
 
         return data, cm
 
+    @staticmethod
+    def GenClassRanges(labels):
+        lastLabel = -1
+        classNum = 0
+        ranges = []
+
+        for i in range(len(labels)):
+            if labels[i] != lastLabel:
+                lastLabel = labels[i]
+                ranges.append([i, 0])
+                if classNum > 0:
+                    ranges[classNum - 1][1] = i
+
+                classNum += 1
+
+        ranges[classNum - 1][1] = len(labels)
+        return ranges
+

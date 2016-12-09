@@ -93,10 +93,21 @@ class SSKernelKMeans:
 
         return constraintMatrix
 
+    def __hasConstraints(self, constraintMatrix):
+        n, d = constraintMatrix.shape
+
+        for i in range(n):
+            for j in range(d):
+                if constraintMatrix[i][j] != 0:
+                    return True
+
+        return False
+
     def __augmentConstraintMatrix(self, constraintMatrix, neighborhoods, k):
-        constraintMatrix = self.__augmentMustLinkConstraints(constraintMatrix, neighborhoods)
-        constraintMatrix = self.__augmentCannotLinkConstraints(constraintMatrix, neighborhoods)
-        constraintMatrix = self.__reweightConstraintMatrix(constraintMatrix, k)
+        if self.__hasConstraints(constraintMatrix):
+            constraintMatrix = self.__augmentMustLinkConstraints(constraintMatrix, neighborhoods)
+            constraintMatrix = self.__augmentCannotLinkConstraints(constraintMatrix, neighborhoods)
+            constraintMatrix = self.__reweightConstraintMatrix(constraintMatrix, k)
 
         return constraintMatrix
 

@@ -9,8 +9,9 @@ sys.path.insert(0, '/home/jrectorb/eecs/545/EECS-545-Project/KernelKMeans')
 #sys.path.insert(0, '/Users/Emily/School/eecs/545/Project/EECS-545-Project/KernelKMeans')
 from KernelKMeans import *
 from SSKernelKMeans import *
+from DataLoad import *
 
-def Test(dataSize, paramVal, constraintStep):
+def TestWithSynthetic(dataSize, paramVal, constraintStep):
     data = np.zeros((dataSize, 2))
     nmiVals = np.zeros((11))
     trueAssignments = [0 if i < (dataSize / 2) else 1 for i in range(dataSize)]
@@ -27,9 +28,39 @@ def Test(dataSize, paramVal, constraintStep):
         numConstraints[j] = j * constraintStep
         print('NMI with ' + str(numConstraints[j]) + ' constraints = ' + str(nmiVals[j]))
 
-    plt.scatter(data[:,0], data[:,1], c=clusterAssignments, cmap=cm.Set1)
-    plt.show()
-#plt.plot(numConstraints, nmiVals)
-    print('NMI = ' + str(np.average(nmiVals)))
+        #plt.scatter(data[:,0], data[:,1], c=clusterAssignments, cmap=cm.Set1)
+        #plt.show(block=False)
 
-Test(200, .5, 50)
+    plt.plot(numConstraints, nmiVals)
+    print('NMI = ' + str(np.average(nmiVals)))
+    plt.show()
+
+def TestPendigits():
+    features, labels = DataLoad.LoadPendigits()
+    n = features.shape[0]
+    nmiVals = np.zeros((11))
+    numConstraints = np.zeros((11))
+
+    classRanges = DataGen.GenClassRanges(labels)
+    similarityMatrix = KernelMatrix(features, 1, .5)
+
+    averages = []
+    for j in range(20):
+        for i in range(11):
+            constraintMatrix = DataGen.GenerateConstraintMatrix(classRanges, i * 50, n, 3)
+
+            ssKernelKMeansAgent = SSKernelKMeans()
+            clusterAssignments = ssKernelKMeansAgent.Cluster(similarityMatrix, constraintMatrix, 3)
+
+            nmiVals[i] = sklearn.metrics.normalized_mutual_info_score(labels, clusterAssignments)
+            numConstraints[i] = i * 50
+            print('NMI with ' + str(numConstraints[i]) + ' constraints = ' + str(nmiVals[i]))
+
+        averages.append(nmiVals)
+
+    plt.plot(numConstraints, np.mean(averages))
+    print('NMI = ' + str(np.average(nmiVals)))
+    plt.show()
+
+#Test(200, .8, 50)
+TestPendigits()
