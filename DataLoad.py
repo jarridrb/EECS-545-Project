@@ -21,3 +21,23 @@ class DataLoad:
                 labels.append(classNum)
 
         return np.vstack(dataSetList), np.array(labels)
+
+    @staticmethod
+    def LoadLetters():
+        dataSetDict = {'I': [], 'J': [], 'L': []}
+        dataSetList = []
+        labels = []
+        with open('Letters/letter-recognition.data', 'rb') as letters:
+            loadedDataSet = csv.reader(letters)
+            for row in loadedDataSet:
+                classLabel = row[0]
+
+                if (classLabel == 'I' or classLabel == 'J' or classLabel == 'L') and np.random.ranf() <= .1:
+                    dataSetDict[classLabel].append(np.array([int(row[i]) for i in range(1, 17)], dtype=object))
+
+        for classNum, classFeatures in dataSetDict.items():
+            for features in classFeatures:
+                dataSetList.append(features)
+                labels.append(classNum)
+
+        return np.vstack(dataSetList), np.array(labels)

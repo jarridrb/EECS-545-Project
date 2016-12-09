@@ -54,8 +54,8 @@ def TestWithSynthetic(dataSize, paramVal, constraintStep):
     print('NMI = ' + str(np.average(nmiVals)))
     plt.show()
 
-def TestPendigits():
-    features, labels = DataLoad.LoadPendigits()
+def TestLetters():
+    features, labels = DataLoad.LoadLetters()
     n = features.shape[0]
     nmiVals = np.zeros((11))
     numConstraints = np.zeros((11))
@@ -64,7 +64,7 @@ def TestPendigits():
     similarityMatrix = KernelMatrix(features, 1, .3)
 
     averages = []
-    for j in range(20):
+    for j in range(2):
         for i in range(11):
             constraintMatrix = DataGen.GenerateConstraintMatrix(classRanges, i * 50, n, 3)
 
@@ -81,5 +81,34 @@ def TestPendigits():
     print('NMI = ' + str(np.average(nmiVals)))
     plt.show()
 
+def TestPendigits():
+    features, labels = DataLoad.LoadPendigits()
+    n = features.shape[0]
+    nmiVals = np.zeros((11))
+    numConstraints = np.zeros((11))
+
+    classRanges = DataGen.GenClassRanges(labels)
+    similarityMatrix = KernelMatrix(features, 1, .3)
+
+    averages = []
+    for j in range(20):
+        nmiVals = []
+        for i in range(11):
+            constraintMatrix = DataGen.GenerateConstraintMatrix(classRanges, i * 50, n, 3)
+
+            ssKernelKMeansAgent = SSKernelKMeans()
+            clusterAssignments = ssKernelKMeansAgent.Cluster(similarityMatrix, constraintMatrix, 3)
+
+            nmiVals.append(sklearn.metrics.normalized_mutual_info_score(labels, clusterAssignments))
+            numConstraints[i] = i * 50
+            print('NMI with ' + str(numConstraints[i]) + ' constraints = ' + str(nmiVals[i]))
+
+        averages.append(nmiVals)
+
+    plt.plot(numConstraints, np.mean(averages, axis=0))
+    print('NMI = ' + str(np.average(nmiVals)))
+    plt.show()
+
 #Test(200, .8, 50)
 TestPendigits()
+#TestLetters()
