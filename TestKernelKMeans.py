@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from pdb import set_trace as st
+from sklearn.metrics.pairwise import pairwise_kernels
 import sklearn.metrics
 import sys
 sys.path.insert(0, '/home/jrectorb/eecs/545/EECS-545-Project/KernelKMeans')
@@ -37,13 +38,19 @@ def TestWithSynthetic(dataSize, paramVal, constraintStep):
     numConstraints = np.zeros((11))
     data[0:dataSize / 2, :] = DataGen.GenerateCircle(.5, .5, 2, dataSize / 2)
     data[dataSize / 2:dataSize, :] = DataGen.GenerateCircle(.5, .5, 5, dataSize / 2)
-    similarityMatrix = KernelMatrix(data, 1, .5)
+    similarityMatrix = KernelMatrix(data, 1, 1)
     for j in range(1, 11):
-        constraintMatrix = DataGen.GenerateConstraintMatrix([(0, dataSize / 2), (dataSize / 2, dataSize)], j * constraintStep, dataSize, 2)
-        ssKernelKMeansAgent = SSKernelKMeans()
-        clusterAssignments = ssKernelKMeansAgent.Cluster(similarityMatrix, constraintMatrix, 2)
+        #constraintMatrix = DataGen.GenerateConstraintMatrix([(0, dataSize / 2), (dataSize / 2, dataSize)], j * constraintStep, dataSize, 2)
+        #ssKernelKMeansAgent = SSKernelKMeans()
+        #clusterAssignments = ssKernelKMeansAgent.Cluster(similarityMatrix, constraintMatrix, 2)
+        kernelKMeansAgent = MyKernelKMeans()
+        theirAssignments = kernelKMeansAgent.cluster(similarityMatrix.raw(), 2, 100)
+        #kernelKMeansAssignments = kernelKMeansAgent.cluster(similarityMatrix, 2, 100)
 
+        kernelKMeansVal = sklearn.metrics.normalized_mutual_info_score(trueAssignments, theirAssignments)
+        print('Kernel K Means NMI = ' + str(kernelKMeansVal))
         nmiVals[j] = sklearn.metrics.normalized_mutual_info_score(trueAssignments, clusterAssignments)
+
         numConstraints[j] = j * constraintStep
         print('NMI with ' + str(numConstraints[j]) + ' constraints = ' + str(nmiVals[j]))
 
@@ -65,15 +72,19 @@ def TestLetters():
 
     averages = []
     for j in range(2):
-        for i in range(11):
+        for i in range(1):
             constraintMatrix = DataGen.GenerateConstraintMatrix(classRanges, i * 50, n, 3)
 
+            kernelKMeansAgent = KernelKMeans()
             ssKernelKMeansAgent = SSKernelKMeans()
-            clusterAssignments = ssKernelKMeansAgent.Cluster(similarityMatrix, constraintMatrix, 3)
+            ssClusterAssignments = ssKernelKMeansAgent.Cluster(similarityMatrix, constraintMatrix, 3)
+            kernelKMeansAssignments = kernelKMeansAgent.cluster(similarityMatrix, 3, 100)
 
-            nmiVals[i] = sklearn.metrics.normalized_mutual_info_score(labels, clusterAssignments)
+            nmiVals[i] = sklearn.metrics.normalized_mutual_info_score(labels, ssClusterAssignments)
+            kernelKMeansVal = sklearn.metrics.normalized_mutual_info_score(labels, kernelKMeansAssignments)
             numConstraints[i] = i * 50
             print('NMI with ' + str(numConstraints[i]) + ' constraints = ' + str(nmiVals[i]))
+            print('Kernel K Means NMI = ' + str(kernelKMeansVal))
 
         averages.append(nmiVals)
 
@@ -88,18 +99,19 @@ def TestPendigits():
     numConstraints = np.zeros((11))
 
     classRanges = DataGen.GenClassRanges(labels)
-    similarityMatrix = KernelMatrix(features, 1, .3)
+    similarityMatrix = pairwise_kernels(features, None, metric='rbf',
+                                        filter_params=True, gamma=.00001)
 
     averages = []
-    for j in range(20):
+    for j in range(10):
         nmiVals = []
         for i in range(11):
             constraintMatrix = DataGen.GenerateConstraintMatrix(classRanges, i * 50, n, 3)
 
             ssKernelKMeansAgent = SSKernelKMeans()
-            clusterAssignments = ssKernelKMeansAgent.Cluster(similarityMatrix, constraintMatrix, 3)
+            ssClusterAssignments = ssKernelKMeansAgent.Cluster(similarityMatrix, constraintMatrix, 3)
 
-            nmiVals.append(sklearn.metrics.normalized_mutual_info_score(labels, clusterAssignments))
+            nmiVals.append(sklearn.metrics.normalized_mutual_info_score(labels, ssClusterAssignments))
             numConstraints[i] = i * 50
             print('NMI with ' + str(numConstraints[i]) + ' constraints = ' + str(nmiVals[i]))
 
@@ -109,6 +121,6 @@ def TestPendigits():
     print('NMI = ' + str(np.average(nmiVals)))
     plt.show()
 
-#Test(200, .8, 50)
+#TestWithSynthetic(200, .8, 50)
 TestPendigits()
 #TestLetters()

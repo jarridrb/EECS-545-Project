@@ -10,7 +10,7 @@ import numpy as np
 #
 
 class KernelMatrix:
-    def __init__(self, data, kernelType, paramVal):
+    def __init__(self, data, kernelType, paramVal = None):
         self.matrix = None
 
         if kernelType == 0:
@@ -19,6 +19,8 @@ class KernelMatrix:
             self.__initMatrix(data, KernelFunctions.Gaussian, paramVal)
         elif kernelType == 2:
             self.__initMatrix(data, KernelFunctions.InverseMultiquadratic, paramVal)
+        elif kernelType == 3:
+            self.__initMatrix(data, KernelFunctions.Linear)
 
     def __initMatrix(self, data, kernelFunction, paramVal):
         n = data.shape[0]

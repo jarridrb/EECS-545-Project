@@ -13,3 +13,6 @@ class KernelFunctions:
     def InverseMultiquadratic(x, y, c):
         return 1 / (np.linalg.norm(x - y) ** 2 + c) ** .5
 
+    @staticmethod
+    def Linear(x, y):
+        return np.dot(x.T, y)

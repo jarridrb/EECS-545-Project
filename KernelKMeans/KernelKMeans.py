@@ -3,19 +3,26 @@ from Cluster import Cluster
 from PointSums import PointSums
 from DistanceCalc import DistanceCalc
 from pdb import set_trace as st
+from sklearn.utils import check_random_state
 import numpy as np
 import copy
 
 # These methods should be static
-class KernelKMeans:
+class MyKernelKMeans:
     def __init__(self):
         pass
 
-    def __initClusters(self, k, n):
+    def __initClusters(self, k, n, oLabels=None):
+        if oLabels == None:
+            state = check_random_state(None)
+            labels = state.randint(k, size=n)
+        else:
+            labels = oLabels
+
         clusters = [Cluster(self.gramMatrix) for i in range(0, k)]
 
         for i in range(0, n):
-            clusters[np.random.randint(0, k)].addPoint(i)
+            clusters[labels[i]].addPoint(i)
 
         return clusters
 
@@ -78,12 +85,12 @@ class KernelKMeans:
 
     # Should pointSums use kernel space data or input space data?
     # Change to use alpha
-    def cluster(self, gramMatrix, k, maxIter, clusters = None):
+    def cluster(self, gramMatrix, k, maxIter, clusters = None, oLabels = None):
         self.lastClusterMap = None
         self.gramMatrix = gramMatrix
         n = self.gramMatrix.shape[0]
         if clusters == None:
-            clusters = self.__initClusters(k, n)
+            clusters = self.__initClusters(k, n, oLabels)
             userInitialized = False
         else:
             userInitialized = True

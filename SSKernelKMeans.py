@@ -117,7 +117,7 @@ class SSKernelKMeans:
             neighborhoods = self.__formNeighborhoods(transClosure)
             constraintMatrix = self.__augmentConstraintMatrix(constraintMatrix, neighborhoods, k)
 
-        initKMatrix = similarityMatrix.raw() + constraintMatrix
+        initKMatrix = similarityMatrix + constraintMatrix
         # If things are faulty, check here. Min eigval != 0 after diagonal shift right now.
         kMatrix = (self.__findSigma(initKMatrix) * np.identity(initKMatrix.shape[0])) + initKMatrix
 
@@ -127,7 +127,8 @@ class SSKernelKMeans:
         else:
             initialClusters = None
 
-        kernelKMeansAgent = KernelKMeans()
+        # Change!
+        kernelKMeansAgent = MyKernelKMeans()
 
         # Should eventually be this once KernelKMeans is changed to use alpha
         # return kernelKMeansAgent.cluster(kMatrix, k, np.ones(kMatrix.shape[0]), initialClusters)

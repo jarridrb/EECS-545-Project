@@ -25,7 +25,12 @@ class Cluster:
         self.clusterPoints.remove(idx)
 
     def thirdTermVal(self):
-        return self.sum / (len(self.clusterPoints) ** 2)
+        sumVal = 0
+        for i in self.clusterPoints:
+            for j in self.clusterPoints:
+                sumVal += self.kernelMatrix[i,j]
+        return sumVal / (len(self.clusterPoints) ** 2)
+        #return self.sum / (len(self.clusterPoints) ** 2)
 
     def size(self):
         return len(self.clusterPoints)
