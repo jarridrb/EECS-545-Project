@@ -215,6 +215,6 @@ def TestCaltech():
     plt.show()
 
 #TestWithSynthetic(200, .8, 50)
-TestPendigits()
-#TestLetters()
+#TestPendigits()
+TestLetters()
 #TestCaltech()

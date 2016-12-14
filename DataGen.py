@@ -37,13 +37,22 @@ class DataGen:
         numbers = []
         for classRange in classRanges:
             numbers += range(classRange[0], classRange[1])
+        choices = {}
+        for i in numbers:
+            for j in numbers:
+                if i != j:
+                    choices[(i, j)] = True
 
         weightVal = numPoints / float(numConstraints * k)
+        import pdb
+        #pdb.set_trace()
 
         currNumConstraints = 0
         while currNumConstraints < numConstraints:
-            i = np.random.choice(numbers)
-            j = np.random.choice(numbers)
+            idx = np.random.choice(len(choices.keys()))
+            pair = choices.keys()[idx]
+            i = pair[0]
+            j = pair[1]
 
             if i != j and weightMatrix[i][j] == 0:
                 if DataGen.__findPointClass(i, classRanges) == DataGen.__findPointClass(j, classRanges):
@@ -53,7 +62,10 @@ class DataGen:
                     else:
                         weightMatrix[i][j] = weightVal
                         weightMatrix[j][i] = weightVal
+
                     currNumConstraints += 1
+                    choices.pop((i,j))
+                    choices.pop((j,i))
                 elif not onlyMustLink:
                     if spectral:
                         weightMatrix[i][j] = 0
@@ -61,7 +73,12 @@ class DataGen:
                     else:
                         weightMatrix[i][j] = -weightVal
                         weightMatrix[j][i] = -weightVal
+
                     currNumConstraints += 1
+                    choices.pop((i,j))
+                    choices.pop((j,i))
+
+
 
         return weightMatrix
 
