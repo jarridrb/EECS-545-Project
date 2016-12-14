@@ -2,7 +2,7 @@ from FarthestFirstInitialization import *
 from scipy.sparse import csgraph
 import numpy as np
 import sys
-sys.path.insert(0, '/home/jrectorb/eecs/545/EECS-545-Project/KernelKMeans')
+sys.path.insert(0, 'KernelKMeans/')
 from KernelKMeans import *
 from pdb import set_trace as st
 
