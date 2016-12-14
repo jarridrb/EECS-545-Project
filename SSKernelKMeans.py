@@ -10,7 +10,7 @@ class SSKernelKMeans:
     def __init__(self):
         pass
 
-    def __findSigma(self, k):
+    def findSigma(self, k):
         minEigVal = np.amin(np.linalg.eigvals(k))
         if minEigVal < 0:
             return abs(minEigVal)
@@ -119,7 +119,7 @@ class SSKernelKMeans:
 
         initKMatrix = similarityMatrix + constraintMatrix
         # If things are faulty, check here. Min eigval != 0 after diagonal shift right now.
-        kMatrix = (self.__findSigma(initKMatrix) * np.identity(initKMatrix.shape[0])) + initKMatrix
+        kMatrix = (self.findSigma(initKMatrix) * np.identity(initKMatrix.shape[0])) + initKMatrix
 
         if self.__hasConstraints(constraintMatrix):
             initializationAgent = FarthestFirstInitialization(kMatrix)

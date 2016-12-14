@@ -26,12 +26,12 @@ def TestWithSynthetic(dataSize, paramVal, constraintStep):
     linearAverages = []
     wardAverages = []
     # The value inside range indicates the number of iterations to be averaged
-    for i in range(5):
+    for i in range(2):
         for j in range(11):
-            bothLinksConstraintMatrix = np.zeros((n,n))
-            onlyMustLinksConstraintMatrix = np.zeros((n,n))
-            bothLinksConstraintMatrix = DataGen.GenerateConstraints(classRanges, j * constraintStep, dataSize, 2, False, None)
-            onlyMustLinksConstraintMatrix = csrm(DataGen.GenerateConstraints(classRanges, j * constraintStep, dataSize, 2, True, None))
+            bothLinksConstraintMatrix = np.zeros((dataSize,dataSize))
+            onlyMustLinksConstraintMatrix = np.zeros((dataSize,dataSize))
+            bothLinksConstraintMatrix = DataGen.GenerateConstraints(bothLinksConstraintMatrix, classRanges, j * constraintStep, dataSize, 2, False, None)
+            onlyMustLinksConstraintMatrix = csrm(DataGen.GenerateConstraints(onlyMustLinksConstraintMatrix, classRanges, j * constraintStep, dataSize, 2, True, None))
 
             wardAgent = AgglomerativeClustering(n_clusters=2, connectivity=onlyMustLinksConstraintMatrix)
             ssKernelKMeansAgent = SSKernelKMeans()
@@ -78,7 +78,7 @@ def TestLetters():
     linearAverages = []
     wardAverages = []
     # The value inside range indicates the number of iterations to be averaged
-    for j in range(10):
+    for j in range(2):
         for i in range(11):
             bothLinksConstraintMatrix = np.zeros((n,n))
             onlyMustLinksConstraintMatrix = np.zeros((n,n))
@@ -182,20 +182,20 @@ def TestCaltech():
         for i in range(21):
             constraintMatrix = np.zeros((n,n))
             spectralConstraintMatrix = np.zeros((n,n))
-            constraintMatrix = DataGen.GenerateConstraints(constraintMatrix, classRanges, i * 50, n, 4, False, None)
-            spectralConstraintMatrix = DataGen.GenerateConstraints(spectralConstraintMatrix, classRanges, i * 50, n, 4, False, similarityMatrix)
+            constraintMatrix = DataGen.GenerateConstraints(constraintMatrix, classRanges, i * 50, n, 4, False, False)
+            spectralConstraintMatrix = DataGen.GenerateConstraints(spectralConstraintMatrix, classRanges, i * 50, n, 4, False, True)
 
             ssKernelKMeansAgent = SSKernelKMeans()
             spectralClusteringAgent = SpectralClustering(n_clusters=4, affinity='precomputed')
 
             spectralAffMatrix = spectralConstraintMatrix - csgraph.laplacian(similarityMatrix)
-            spectralAffMatrix = (SSKernelKMeans.__findSigma(spectralAffMatrix) * np.identity(n)) + spectralAffMatrix
+            spectralAffMatrix = (ssKernelKMeansAgent.findSigma(spectralAffMatrix) * np.identity(n)) + spectralAffMatrix
 
             ssClusterAssignments = ssKernelKMeansAgent.Cluster(similarityMatrix, constraintMatrix, 4)
             spectralClusteringAssignments = spectralClusteringAgent.fit_predict(spectralAffMatrix)
 
             nmiVals[i,0] = sklearn.metrics.normalized_mutual_info_score(DataGen.GetTestLabels(classRanges, n, labels.tolist()), DataGen.GetTestLabels(classRanges, 200, ssClusterAssignments))
-            nmiVals[i,1] = sklearn.metrics.normalized_mutual_info_score(DataGen.GetTestLabels(classRanges, n, labels.tolist()), DataGen.GetTestLabels(classRanges, 200, spectralClusteringAssignments))
+            nmiVals[i,1] = sklearn.metrics.normalized_mutual_info_score(DataGen.GetTestLabels(classRanges, n, labels.tolist()), DataGen.GetTestLabels(classRanges, 200, spectralClusteringAssignments.tolist()))
 
             numConstraints[i] = i * 50
             print('SS Kernel K Means NMI with ' + str(numConstraints[i]) + ' constraints = ' + str(nmiVals[i,0]))
@@ -216,5 +216,5 @@ def TestCaltech():
 
 #TestWithSynthetic(200, .8, 50)
 #TestPendigits()
-TestLetters()
-#TestCaltech()
+#TestLetters()
+TestCaltech()

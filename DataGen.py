@@ -41,11 +41,13 @@ class DataGen:
         for i in numbers:
             for j in numbers:
                 if i != j:
-                    choices[(i, j)] = True
+                    if onlyMustLink:
+                        if DataGen.__findPointClass(i, classRanges) == DataGen.__findPointClass(j, classRanges):
+                            choices[(i, j)] = True
+                    else:
+                        choices[(i, j)] = True
 
         weightVal = numPoints / float(numConstraints * k)
-        import pdb
-        #pdb.set_trace()
 
         currNumConstraints = 0
         while currNumConstraints < numConstraints:
