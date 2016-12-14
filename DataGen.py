@@ -27,28 +27,41 @@ class DataGen:
             if point >= classRanges[i][0] and point < classRanges[i][1]:
                 return i
 
+        return -1
+
     @staticmethod
-    def GenerateConstraintMatrix(classRanges, numConstraints, numPoints, k):
-        weightMatrix = np.zeros((numPoints, numPoints))
+    def GenerateConstraints(weightMatrix, classRanges, numConstraints, numPoints, k, onlyMustLink, spectral):
         if numConstraints == 0:
             return weightMatrix
+
+        numbers = []
+        for classRange in classRanges:
+            numbers += range(classRange[0], classRange[1])
 
         weightVal = numPoints / float(numConstraints * k)
 
         currNumConstraints = 0
         while currNumConstraints < numConstraints:
-            i = np.random.randint(0, numPoints)
-            j = np.random.randint(0, numPoints)
+            i = np.random.choice(numbers)
+            j = np.random.choice(numbers)
 
             if i != j and weightMatrix[i][j] == 0:
-                if DataGen.__findPointClass(i, classRanges) != DataGen.__findPointClass(j, classRanges):
-                    weightMatrix[i][j] = -weightVal
-                    weightMatrix[j][i] = -weightVal
-                else:
-                    weightMatrix[i][j] = weightVal
-                    weightMatrix[j][i] = weightVal
-
-                currNumConstraints += 1
+                if DataGen.__findPointClass(i, classRanges) == DataGen.__findPointClass(j, classRanges):
+                    if spectral:
+                        weightMatrix[i][j] = 1
+                        weightMatrix[j][i] = 1
+                    else:
+                        weightMatrix[i][j] = weightVal
+                        weightMatrix[j][i] = weightVal
+                    currNumConstraints += 1
+                elif not onlyMustLink:
+                    if spectral:
+                        weightMatrix[i][j] = 0
+                        weightMatrix[j][i] = 0
+                    else:
+                        weightMatrix[i][j] = -weightVal
+                        weightMatrix[j][i] = -weightVal
+                    currNumConstraints += 1
 
         return weightMatrix
 
@@ -102,10 +115,17 @@ class DataGen:
                 lastLabel = labels[i]
                 ranges.append([i, 0])
                 if classNum > 0:
-                    ranges[classNum - 1][1] = i
+                    ranges[classNum - 1][1] = i - ((i - ranges[classNum - 1][0]) / 2)
 
                 classNum += 1
 
-        ranges[classNum - 1][1] = len(labels)
+        ranges[classNum - 1][1] = len(labels) - ((len(labels) - ranges[classNum - 1][0]) / 2)
         return ranges
 
+    @staticmethod
+    def GetTestLabels(classRanges, end, labels):
+        testLabels = []
+        for i in range(1, len(classRanges)):
+            testLabels += labels[classRanges[i-1][1]:classRanges[i][0] ]
+
+        return testLabels + labels[classRanges[len(classRanges)-1][1]:]

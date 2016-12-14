@@ -1,4 +1,6 @@
 import numpy as np
+import scipy.io as sio
+import pdb
 import csv
 
 class DataLoad:
@@ -41,3 +43,19 @@ class DataLoad:
                 labels.append(classNum)
 
         return np.vstack(dataSetList), np.array(labels)
+
+    @staticmethod
+    def LoadCaltech():
+        labels = []
+        for i in range(300):
+            if i < 75:
+                labels.append(0)
+            elif i < 150:
+                labels.append(1)
+            elif i < 225:
+                labels.append(2)
+            else:
+                labels.append(3)
+
+        return sio.loadmat('kMatrix.mat')['K'], np.array(labels)
+

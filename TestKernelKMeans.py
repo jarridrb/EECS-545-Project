@@ -121,6 +121,33 @@ def TestPendigits():
     print('NMI = ' + str(np.average(nmiVals)))
     plt.show()
 
+def TestCaltech():
+    similarityMatrix, labels = DataLoad.LoadCaltech()
+    n = similarityMatrix.shape[0]
+    nmiVals = np.zeros((11))
+    numConstraints = np.zeros((11))
+
+    classRanges = DataGen.GenClassRanges(labels)
+    averages = []
+    for j in range(2):
+        nmiVals = [0 for i in range(11)]
+        for i in range(1, 11):
+            constraintMatrix = DataGen.GenerateConstraintMatrix(classRanges, 500 + (i * 50), n, 3)
+
+            ssKernelKMeansAgent = SSKernelKMeans()
+            ssClusterAssignments = ssKernelKMeansAgent.Cluster(similarityMatrix, constraintMatrix, 3)
+
+            nmiVals[i] = sklearn.metrics.normalized_mutual_info_score(labels, ssClusterAssignments)
+            numConstraints[i] = 500 + (i * 50)
+            print('NMI with ' + str(numConstraints[i]) + ' constraints = ' + str(nmiVals[i]))
+
+        averages.append(nmiVals)
+
+    plt.plot(numConstraints, np.mean(averages, axis=0))
+    print('NMI = ' + str(np.average(nmiVals)))
+    plt.show()
+
 #TestWithSynthetic(200, .8, 50)
-TestPendigits()
+#TestPendigits()
 #TestLetters()
+TestCaltech()
