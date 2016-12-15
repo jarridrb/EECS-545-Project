@@ -66,7 +66,8 @@ def TestWithSynthetic(dataSize, paramVal, constraintStep):
     plt.plot(numConstraints, np.mean(linearAverages, axis=0), '-o')
     plt.plot(numConstraints, np.mean(wardAverages, axis=0), ':s')
 
-    plt.legend(['SS Kernel KMeans - Gaussian', 'SS Kernel KMeans - Linear', 'Ward Clustering'], loc='upper left')
+    plt.rcParams.update({'font.size': 21})
+    plt.legend(['SS Kernel KMeans - Gaussian', 'SS Kernel KMeans - Linear', 'Agglomerative Clustering'], loc='upper left')
     plt.xlabel('Number of Constraints')
     plt.ylabel('NMI Value')
     plt.title('Two Circles Data Set')
