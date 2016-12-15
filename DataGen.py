@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import copy
 from pdb import set_trace as st
 
 class DataGen:
@@ -34,15 +35,24 @@ class DataGen:
         if numConstraints == 0:
             return weightMatrix
 
+        if spectral:
+            newMatrix = copy.deepcopy(weightMatrix)
+        else:
+            newMatrix = weightMatrix
+
         numbers = []
-        for classRange in classRanges:
-            numbers += range(classRange[0], classRange[1])
+        labels = {}
+        for i in range(len(classRanges)):
+            for j in range(classRanges[i][0], classRanges[i][1]):
+                numbers.append(j)
+                labels[j] = i
+
         choices = {}
         for i in numbers:
             for j in numbers:
                 if i != j:
                     if onlyMustLink:
-                        if DataGen.__findPointClass(i, classRanges) == DataGen.__findPointClass(j, classRanges):
+                        if labels[i] == labels[j]:
                             choices[(i, j)] = True
                     else:
                         choices[(i, j)] = True
@@ -56,33 +66,31 @@ class DataGen:
             i = pair[0]
             j = pair[1]
 
-            if i != j and weightMatrix[i][j] == 0:
-                if DataGen.__findPointClass(i, classRanges) == DataGen.__findPointClass(j, classRanges):
-                    if spectral:
-                        weightMatrix[i][j] = 1
-                        weightMatrix[j][i] = 1
-                    else:
-                        weightMatrix[i][j] = weightVal
-                        weightMatrix[j][i] = weightVal
+            if labels[i] == labels[j]:
+                if spectral:
+                    newMatrix[i][j] = 1
+                    newMatrix[j][i] = 1
+                else:
+                    newMatrix[i][j] = weightVal
+                    newMatrix[j][i] = weightVal
 
-                    currNumConstraints += 1
-                    choices.pop((i,j))
-                    choices.pop((j,i))
-                elif not onlyMustLink:
-                    if spectral:
-                        weightMatrix[i][j] = 0
-                        weightMatrix[j][i] = 0
-                    else:
-                        weightMatrix[i][j] = -weightVal
-                        weightMatrix[j][i] = -weightVal
+                currNumConstraints += 1
+                choices.pop((i,j))
+                choices.pop((j,i))
 
-                    currNumConstraints += 1
-                    choices.pop((i,j))
-                    choices.pop((j,i))
+            elif not onlyMustLink:
+                if spectral:
+                    newMatrix[i][j] = 0
+                    newMatrix[j][i] = 0
+                else:
+                    newMatrix[i][j] = -weightVal
+                    newMatrix[j][i] = -weightVal
 
+                currNumConstraints += 1
+                choices.pop((i,j))
+                choices.pop((j,i))
 
-
-        return weightMatrix
+        return newMatrix
 
     @staticmethod
     def GenerateTestConstraints():

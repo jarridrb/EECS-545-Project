@@ -34,20 +34,33 @@ class FarthestFirstInitialization:
         return D
 
     def InitializeClusters(self, neighborhoods, k):
-        candidateClusters = [Cluster(self.similarityMatrix) for i in range(len(neighborhoods.keys()))]
+        candidateClusters = []
+        neighborhoodNumToClusterNum = {}
 
-        if k == len(candidateClusters):
-            selectedClusters = candidateClusters
-        else:
-            bestSize = -1
-            largestCluster = -1
-            for neighborhoodNum, neighborhoodMembers in neighborhoods.items():
+        i = 0
+        for clusterNum, members in neighborhoods.items():
+            if len(members) > 1:
+                candidateClusters.append(Cluster(self.similarityMatrix))
+                neighborhoodNumToClusterNum[i] = len(candidateClusters) - 1
+
+            i += 1
+
+        bestSize = -1
+        largestCluster = -1
+        for neighborhoodNum, neighborhoodMembers in neighborhoods.items():
+            if neighborhoodNum in neighborhoodNumToClusterNum:
+                clusterNum = neighborhoodNumToClusterNum[neighborhoodNum]
                 for i in neighborhoodMembers:
-                    candidateClusters[neighborhoodNum].addPoint(i)
+                    candidateClusters[clusterNum].addPoint(i)
 
-                if bestSize == -1 or candidateClusters[neighborhoodNum].size() > bestSize:
-                    bestSize = candidateClusters[neighborhoodNum].size()
-                    largestCluster = neighborhoodNum
+                if bestSize == -1 or candidateClusters[clusterNum].size() > bestSize:
+                    bestSize = candidateClusters[clusterNum].size()
+                    largestCluster = clusterNum
+
+        # Make this cleaner
+        if k == len(candidateClusters):
+            return candidateClusters
+        else:
 
             distanceMatrix = self.__distanceMatrix(candidateClusters)
             selectedClusters = [largestCluster]
@@ -55,7 +68,7 @@ class FarthestFirstInitialization:
 
             while len(selectedClusters) < k:
                 avgDists = np.mean(selectedClusterDists, 0)
-                for i in np.argsort(avgDists):
+                for i in np.argsort(avgDists)[::-1]:
                     if i not in selectedClusters:
                         selectedClusters.append(i)
                         selectedClusterDists.append(distanceMatrix[i])

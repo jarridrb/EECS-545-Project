@@ -14,6 +14,7 @@ class DataWrite:
         with open('points.data', 'w') as pointsFile:
             pointsWriter = csv.writer(pointsFile)
 
+            pointsWriter.writerow(data.shape)
             for i in range(data.shape[0]):
                 pointsWriter.writerow(data[i,:])
 
@@ -25,11 +26,22 @@ class DataWrite:
             for row in labelReader:
                 return [int(i) for i in row]
 
-    #@staticmethod
-    #def ReadPoints():
-    #    points = np.zeros((200,2))
-    #    with open('points.data', 'r') as pointsFile:
-    #        pointsReader = csv.reader(pointsFile)
+    @staticmethod
+    def ReadPoints(fname):
+        with open(fname, 'r') as pointsFile:
+            pointsReader = csv.reader(pointsFile)
 
-    #        for row in pointsReader:
-    #
+            i = 0
+            matrix = None
+            for row in pointsReader:
+                if i == 0:
+                    n = int(row[0])
+                    m = int(row[1])
+                    matrix = np.zeros((n,m))
+                else:
+                    matrix[i-1,:] = np.array(row, dtype='f8')
+
+                i += 1
+
+            return matrix
+

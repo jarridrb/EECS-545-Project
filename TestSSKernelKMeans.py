@@ -1,13 +1,22 @@
 from DataGen import *
 from SSKernelKMeans import *
 from DataLoad import *
+from WriteData import *
 from scipy.sparse import csr_matrix as csrm
 from scipy.sparse import csgraph
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import cm
 import sklearn.metrics
 from sklearn.cluster import AgglomerativeClustering
 from sklearn.cluster import SpectralClustering
+
+def GetLabelIndices(labels):
+    labelMap = {0: [], 1: []}
+    for i in range(len(labels)):
+        labelMap[labels[i]].append(i)
+
+    return labelMap
 
 def TestWithSynthetic(dataSize, paramVal, constraintStep):
     data = np.zeros((dataSize, 2))
@@ -57,7 +66,7 @@ def TestWithSynthetic(dataSize, paramVal, constraintStep):
     plt.plot(numConstraints, np.mean(linearAverages, axis=0), '-o')
     plt.plot(numConstraints, np.mean(wardAverages, axis=0), ':s')
 
-    plt.legend(['SS Kernel KMeans - RBF', 'SS Kernel KMeans - Linear', 'Ward Clustering'], loc='upper left')
+    plt.legend(['SS Kernel KMeans - Gaussian', 'SS Kernel KMeans - Linear', 'Ward Clustering'], loc='upper left')
     plt.xlabel('Number of Constraints')
     plt.ylabel('NMI Value')
     plt.title('Two Circles Data Set')
@@ -79,7 +88,7 @@ def TestLetters():
     wardAverages = []
     # The value inside range indicates the number of iterations to be averaged
     for j in range(2):
-        for i in range(11):
+        for i in range(1,11):
             bothLinksConstraintMatrix = np.zeros((n,n))
             onlyMustLinksConstraintMatrix = np.zeros((n,n))
             bothLinksConstraintMatrix = DataGen.GenerateConstraints(bothLinksConstraintMatrix, classRanges, i * 50, n, 3, False, None)
@@ -92,10 +101,13 @@ def TestLetters():
             linearSSKernelKMeansClusterAssignments = ssKernelKMeansAgent.Cluster(linearSimilarityMatrix, bothLinksConstraintMatrix, 3)
             wardClusterAssignments = wardAgent.fit_predict(features)
 
-            nmiVals[i,0] = sklearn.metrics.normalized_mutual_info_score(DataGen.GetTestLabels(classRanges, n, labels.tolist()), DataGen.GetTestLabels(classRanges, 200, rbfSSKernelKMeansClusterAssignments))
-            nmiVals[i,1] = sklearn.metrics.normalized_mutual_info_score(DataGen.GetTestLabels(classRanges, n, labels.tolist()), DataGen.GetTestLabels(classRanges, 200, linearSSKernelKMeansClusterAssignments))
-            nmiVals[i,2] = sklearn.metrics.normalized_mutual_info_score(DataGen.GetTestLabels(classRanges, n, labels.tolist()), DataGen.GetTestLabels(classRanges, 200, wardClusterAssignments.tolist()))
+            nmiVals[i,0] = sklearn.metrics.normalized_mutual_info_score(DataGen.GetTestLabels(classRanges, n, labels.tolist()), DataGen.GetTestLabels(classRanges, n, rbfSSKernelKMeansClusterAssignments))
+            nmiVals[i,1] = sklearn.metrics.normalized_mutual_info_score(DataGen.GetTestLabels(classRanges, n, labels.tolist()), DataGen.GetTestLabels(classRanges, n, linearSSKernelKMeansClusterAssignments))
+            nmiVals[i,2] = sklearn.metrics.normalized_mutual_info_score(DataGen.GetTestLabels(classRanges, n, labels.tolist()), DataGen.GetTestLabels(classRanges, n, wardClusterAssignments.tolist()))
             numConstraints[i] = i * 50
+            if nmiVals[i,0] <= 1e-03:
+                import pdb
+                pdb.set_trace()
 
             print('SS Kernel K Means with rbf kernel NMI with ' + str(numConstraints[i]) + ' constraints = ' + str(nmiVals[i,0]))
             print('SS Kernel K Means with linear kernel NMI with ' + str(numConstraints[i]) + ' constraints = ' + str(nmiVals[i,1]))
@@ -144,9 +156,9 @@ def TestPendigits():
             linearSSKernelKMeansClusterAssignments = ssKernelKMeansAgent.Cluster(linearSimilarityMatrix, bothLinksConstraintMatrix, 3)
             wardClusterAssignments = wardAgent.fit_predict(features)
 
-            nmiVals[i,0] = sklearn.metrics.normalized_mutual_info_score(DataGen.GetTestLabels(classRanges, n, labels.tolist()), DataGen.GetTestLabels(classRanges, 200, rbfSSKernelKMeansClusterAssignments))
-            nmiVals[i,1] = sklearn.metrics.normalized_mutual_info_score(DataGen.GetTestLabels(classRanges, n, labels.tolist()), DataGen.GetTestLabels(classRanges, 200, linearSSKernelKMeansClusterAssignments))
-            nmiVals[i,2] = sklearn.metrics.normalized_mutual_info_score(DataGen.GetTestLabels(classRanges, n, labels.tolist()), DataGen.GetTestLabels(classRanges, 200, wardClusterAssignments.tolist()))
+            nmiVals[i,0] = sklearn.metrics.normalized_mutual_info_score(DataGen.GetTestLabels(classRanges, n, labels.tolist()), DataGen.GetTestLabels(classRanges, n, rbfSSKernelKMeansClusterAssignments))
+            nmiVals[i,1] = sklearn.metrics.normalized_mutual_info_score(DataGen.GetTestLabels(classRanges, n, labels.tolist()), DataGen.GetTestLabels(classRanges, n, linearSSKernelKMeansClusterAssignments))
+            nmiVals[i,2] = sklearn.metrics.normalized_mutual_info_score(DataGen.GetTestLabels(classRanges, n, labels.tolist()), DataGen.GetTestLabels(classRanges, n, wardClusterAssignments.tolist()))
             numConstraints[i] = i * 50
 
             print('SS Kernel K Means with rbf kernel NMI with ' + str(numConstraints[i]) + ' constraints = ' + str(nmiVals[i,0]))
@@ -170,32 +182,33 @@ def TestPendigits():
 
 def TestCaltech():
     similarityMatrix, labels = DataLoad.LoadCaltech()
+    spectralSimMatrix = sklearn.preprocessing.normalize(similarityMatrix)
     n = similarityMatrix.shape[0]
-    nmiVals = np.zeros((11,2))
-    numConstraints = np.zeros((11))
+    nmiVals = np.zeros((21,2))
+    numConstraints = np.zeros((21))
 
     classRanges = DataGen.GenClassRanges(labels)
     normAssocAverages = []
     spectralAverages = []
     # The value inside range indicates the number of iterations to be averaged
-    for j in range(2):
+    for j in range(1):
         for i in range(21):
             constraintMatrix = np.zeros((n,n))
             spectralConstraintMatrix = np.zeros((n,n))
             constraintMatrix = DataGen.GenerateConstraints(constraintMatrix, classRanges, i * 50, n, 4, False, False)
-            spectralConstraintMatrix = DataGen.GenerateConstraints(spectralConstraintMatrix, classRanges, i * 50, n, 4, False, True)
+            spectralConstraintMatrix = DataGen.GenerateConstraints(spectralSimMatrix, classRanges, i * 50, n, 4, False, True)
 
             ssKernelKMeansAgent = SSKernelKMeans()
             spectralClusteringAgent = SpectralClustering(n_clusters=4, affinity='precomputed')
 
-            spectralAffMatrix = spectralConstraintMatrix - csgraph.laplacian(similarityMatrix)
+            spectralAffMatrix = spectralConstraintMatrix - csgraph.laplacian(spectralSimMatrix)
             spectralAffMatrix = (ssKernelKMeansAgent.findSigma(spectralAffMatrix) * np.identity(n)) + spectralAffMatrix
 
             ssClusterAssignments = ssKernelKMeansAgent.Cluster(similarityMatrix, constraintMatrix, 4)
             spectralClusteringAssignments = spectralClusteringAgent.fit_predict(spectralAffMatrix)
 
-            nmiVals[i,0] = sklearn.metrics.normalized_mutual_info_score(DataGen.GetTestLabels(classRanges, n, labels.tolist()), DataGen.GetTestLabels(classRanges, 200, ssClusterAssignments))
-            nmiVals[i,1] = sklearn.metrics.normalized_mutual_info_score(DataGen.GetTestLabels(classRanges, n, labels.tolist()), DataGen.GetTestLabels(classRanges, 200, spectralClusteringAssignments.tolist()))
+            nmiVals[i,0] = max(0, sklearn.metrics.normalized_mutual_info_score(DataGen.GetTestLabels(classRanges, n, labels.tolist()), DataGen.GetTestLabels(classRanges, n, ssClusterAssignments)))
+            nmiVals[i,1] = sklearn.metrics.normalized_mutual_info_score(DataGen.GetTestLabels(classRanges, n, labels.tolist()), DataGen.GetTestLabels(classRanges, n, spectralClusteringAssignments.tolist()))
 
             numConstraints[i] = i * 50
             print('SS Kernel K Means NMI with ' + str(numConstraints[i]) + ' constraints = ' + str(nmiVals[i,0]))
